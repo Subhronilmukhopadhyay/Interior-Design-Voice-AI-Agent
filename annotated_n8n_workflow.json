@@ -1,0 +1,540 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "expression": "*/5"
+            }
+          ]
+        }
+      },
+      "id": "1",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "list",
+        "baseId": "app2ssjcEHeWNYDxk",
+        "tableId": "tblRDOJZMhX7CoJrq  // Leads Table",
+        "returnAll": false,
+        "limit": 10,
+        "options": {
+          "filterByFormula": "AND({Status} = 'TBC', {Attempt} < 3)"
+        }
+      },
+      "id": "2",
+      "name": "Airtable - Get TBC Leads",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ],
+      "credentials": {
+        "airtableApi": {
+          "id": "1",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "3",
+      "name": "No Operation",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        650,
+        150
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "4",
+      "name": "SplitInBatches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json[\"records\"].length }}",
+              "operation": "equal",
+              "value2": "0"
+            }
+          ]
+        }
+      },
+      "id": "5",
+      "name": "IF - Records Found",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        450,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.vapi.ai/call",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone_number",
+              "value": "={{ $json[\"Mobile\"] }}"
+            },
+            {
+              "name": "assistant_id",
+              "value": "YOUR_ASSISTANT_ID"
+            },
+            {
+              "name": "first_name",
+              "value": "={{ $json[\"First Name\"] }}"
+            },
+            {
+              "name": "record",
+              "value": "true"
+            },
+            {
+              "name": "contact_id",
+              "value": "={{ $json[\"id\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6",
+      "name": "Vapi - Make Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2",
+          "name": "Vapi API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "baseId": "app2ssjcEHeWNYDxk",
+        "tableId": "tblRDOJZMhX7CoJrq  // Leads Table",
+        "id": "={{ $json[\"id\"] }}",
+        "options": {
+          "cellFormat": "json",
+          "fields": {
+            "Status": "In-Progress",
+            "Attempt": "={{ $json[\"Attempt\"] + 1 }}"
+          }
+        }
+      },
+      "id": "7",
+      "name": "Airtable - Update to In-Progress",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        300
+      ],
+      "credentials": {
+        "airtableApi": {
+          "id": "1",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "call-webhook",
+        "options": {}
+      },
+      "id": "8",
+      "name": "Webhook - Call Results",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        600
+      ],
+      "webhookId": "call-results-webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.status }}",
+              "operation": "equal",
+              "value2": "completed"
+            }
+          ]
+        }
+      },
+      "id": "9",
+      "name": "IF - Call Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        450,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "baseId": "app2ssjcEHeWNYDxk",
+        "tableId": "tblRDOJZMhX7CoJrq  // Leads Table",
+        "id": "={{ $json.body.metadata.contact_id }}",
+        "options": {
+          "cellFormat": "json",
+          "fields": {
+            "Status": "Called",
+            "Summary": "={{ $json.body.transcript }}"
+          }
+        }
+      },
+      "id": "10",
+      "name": "Airtable - Update Called",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 1,
+      "position": [
+        650,
+        550
+      ],
+      "credentials": {
+        "airtableApi": {
+          "id": "1",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operations": [
+          {
+            "operation": "create",
+            "baseId": "app2ssjcEHeWNYDxk",
+            "tableId": "tblYYYYYYYYYYYYYY",
+            "options": {
+              "cellFormat": "json",
+              "fields": {
+                "callproviderID": "={{ $json.body.id }}",
+                "customernumber": "={{ $json.body.to }}",
+                "type": "outbound",
+                "started": "={{ $json.body.created_at }}",
+                "ended": "={{ $json.body.updated_at }}",
+                "milliseconds": "={{ $json.body.duration }}",
+                "ended reason": "={{ $json.body.end_reason }}",
+                "transcript": "={{ $json.body.transcript }}"
+              }
+            }
+          }
+        ]
+      },
+      "id": "11",
+      "name": "Airtable - Create Call Record",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 1,
+      "position": [
+        850,
+        550
+      ],
+      "credentials": {
+        "airtableApi": {
+          "id": "1",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.status }}",
+              "operation": "equal",
+              "value2": "failed"
+            }
+          ]
+        }
+      },
+      "id": "12",
+      "name": "IF - Call Failed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        650
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $node[\"Airtable - Get Failed Lead\"].json[\"Attempt\"] }}",
+              "operation": "larger",
+              "value2": 2
+            }
+          ]
+        }
+      },
+      "id": "13",
+      "name": "IF - More Than 2 Attempts",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        650
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "baseId": "app2ssjcEHeWNYDxk",
+        "tableId": "tblRDOJZMhX7CoJrq  // Leads Table",
+        "id": "={{ $json.body.metadata.contact_id }}"
+      },
+      "id": "14",
+      "name": "Airtable - Get Failed Lead",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 1,
+      "position": [
+        850,
+        650
+      ],
+      "credentials": {
+        "airtableApi": {
+          "id": "1",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "baseId": "app2ssjcEHeWNYDxk",
+        "tableId": "tblRDOJZMhX7CoJrq  // Leads Table",
+        "id": "={{ $json.body.metadata.contact_id }}",
+        "options": {
+          "cellFormat": "json",
+          "fields": {
+            "Status": "Failed",
+            "Summary": "Unreachable after multiple attempts"
+          }
+        }
+      },
+      "id": "15",
+      "name": "Airtable - Mark as Failed",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        600
+      ],
+      "credentials": {
+        "airtableApi": {
+          "id": "1",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "baseId": "app2ssjcEHeWNYDxk",
+        "tableId": "tblRDOJZMhX7CoJrq  // Leads Table",
+        "id": "={{ $json.body.metadata.contact_id }}",
+        "options": {
+          "cellFormat": "json",
+          "fields": {
+            "Status": "TBC",
+            "Date Time": "={{ $now.plus({minutes: 1}).toISO() }}"
+          }
+        }
+      },
+      "id": "16",
+      "name": "Airtable - Schedule Retry",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        700
+      ],
+      "credentials": {
+        "airtableApi": {
+          "id": "1",
+          "name": "Airtable account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Get TBC Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Get TBC Leads": {
+      "main": [
+        [
+          {
+            "node": "IF - Records Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SplitInBatches": {
+      "main": [
+        [
+          {
+            "node": "Vapi - Make Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Records Found": {
+      "main": [
+        [
+          {
+            "node": "No Operation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SplitInBatches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vapi - Make Call": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Update to In-Progress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Call Results": {
+      "main": [
+        [
+          {
+            "node": "IF - Call Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Call Status": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Update Called",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF - Call Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Update Called": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Create Call Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Call Failed": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Get Failed Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Get Failed Lead": {
+      "main": [
+        [
+          {
+            "node": "IF - More Than 2 Attempts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - More Than 2 Attempts": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Mark as Failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Airtable - Schedule Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

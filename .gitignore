@@ -1,0 +1,27 @@
+# Node.js dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# System-specific files
+.DS_Store
+Thumbs.db
+
+# Compiled files or output
+*.out
+*.class
+Debuggers/trial.json
+
+# OS-generated files
+*.swp
+*.swo
+
+# VS Code settings (optional, if you don't want to share workspace settings)
+.vscode/
+
+# Lock files (optional if you want consistent installs across machines, otherwise include)
+package-lock.json
