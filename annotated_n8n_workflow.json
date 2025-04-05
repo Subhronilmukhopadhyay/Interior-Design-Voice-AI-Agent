@@ -1,71 +1,72 @@
 {
+  "name": "My workflow",
   "nodes": [
     {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "minutes",
-              "expression": "*/5"
-            }
-          ]
-        }
-      },
-      "id": "1",
+      "parameters": {},
+      "id": "1d03a317-9001-45e8-bd11-24c427367fbb",
       "name": "Schedule Trigger",
       "type": "n8n-nodes-base.cron",
       "typeVersion": 1,
       "position": [
-        250,
-        300
+        -200,
+        160
       ]
     },
     {
       "parameters": {
+        "authentication": "airtableTokenApi",
         "operation": "list",
-        "baseId": "app2ssjcEHeWNYDxk",
-        "tableId": "tblRDOJZMhX7CoJrq  // Leads Table",
+        "application": {
+          "__rl": true,
+          "value": "app2ssjcEHeWNYDxk",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblRDOJZMhX7CoJrq",
+          "mode": "id"
+        },
         "returnAll": false,
         "limit": 10,
-        "options": {
-          "filterByFormula": "AND({Status} = 'TBC', {Attempt} < 3)"
-        }
+        "additionalOptions": {}
       },
-      "id": "2",
+      "id": "09f528c8-2d5b-4355-aedb-4ec536879047",
       "name": "Airtable - Get TBC Leads",
       "type": "n8n-nodes-base.airtable",
       "typeVersion": 1,
       "position": [
-        450,
-        300
+        0,
+        160
       ],
       "credentials": {
-        "airtableApi": {
-          "id": "1",
-          "name": "Airtable account"
+        "airtableTokenApi": {
+          "id": "VGS7RvNv9oE7tq9w",
+          "name": "Airtable Personal Access Token account"
         }
       }
     },
     {
       "parameters": {},
-      "id": "3",
+      "id": "e4a4921a-ec68-4c2c-a6be-e0ddb8dd9802",
       "name": "No Operation",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        650,
-        150
+        200,
+        0
       ]
     },
     {
-      "parameters": {},
-      "id": "4",
+      "parameters": {
+        "options": {}
+      },
+      "id": "1a07b64d-9266-4537-b9f0-b27769646650",
       "name": "SplitInBatches",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 1,
       "position": [
-        650,
-        300
+        200,
+        160
       ]
     },
     {
@@ -74,95 +75,64 @@
           "string": [
             {
               "value1": "={{ $json[\"records\"].length }}",
-              "operation": "equal",
               "value2": "0"
             }
           ]
         }
       },
-      "id": "5",
+      "id": "36bc2971-9bd2-414e-a0a0-70d077aef6e2",
       "name": "IF - Records Found",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        450,
-        150
+        0,
+        0
       ]
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "=https://api.vapi.ai/call",
         "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "phone_number",
-              "value": "={{ $json[\"Mobile\"] }}"
-            },
-            {
-              "name": "assistant_id",
-              "value": "YOUR_ASSISTANT_ID"
-            },
-            {
-              "name": "first_name",
-              "value": "={{ $json[\"First Name\"] }}"
-            },
-            {
-              "name": "record",
-              "value": "true"
-            },
-            {
-              "name": "contact_id",
-              "value": "={{ $json[\"id\"] }}"
-            }
-          ]
-        },
+        "url": "=https://api.vapi.ai/call",
         "options": {}
       },
-      "id": "6",
+      "id": "9b55551e-3f2c-4ff4-ae6a-aec84ec223b0",
       "name": "Vapi - Make Call",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
       "position": [
-        850,
-        300
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "2",
-          "name": "Vapi API Key"
-        }
-      }
+        400,
+        160
+      ]
     },
     {
       "parameters": {
+        "authentication": "airtableTokenApi",
         "operation": "update",
-        "baseId": "app2ssjcEHeWNYDxk",
-        "tableId": "tblRDOJZMhX7CoJrq  // Leads Table",
+        "application": {
+          "__rl": true,
+          "value": "app2ssjcEHeWNYDxk",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblRDOJZMhX7CoJrq",
+          "mode": "id"
+        },
         "id": "={{ $json[\"id\"] }}",
-        "options": {
-          "cellFormat": "json",
-          "fields": {
-            "Status": "In-Progress",
-            "Attempt": "={{ $json[\"Attempt\"] + 1 }}"
-          }
-        }
+        "options": {}
       },
-      "id": "7",
+      "id": "46ed8479-3e16-4abe-b026-33f0f085f473",
       "name": "Airtable - Update to In-Progress",
       "type": "n8n-nodes-base.airtable",
       "typeVersion": 1,
       "position": [
-        1050,
-        300
+        600,
+        160
       ],
       "credentials": {
-        "airtableApi": {
-          "id": "1",
-          "name": "Airtable account"
+        "airtableTokenApi": {
+          "id": "VGS7RvNv9oE7tq9w",
+          "name": "Airtable Personal Access Token account"
         }
       }
     },
@@ -172,13 +142,13 @@
         "path": "call-webhook",
         "options": {}
       },
-      "id": "8",
+      "id": "7973353e-326d-4ac7-aaa8-2af4820f0024",
       "name": "Webhook - Call Results",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        250,
-        600
+        -200,
+        460
       ],
       "webhookId": "call-results-webhook"
     },
@@ -188,85 +158,80 @@
           "string": [
             {
               "value1": "={{ $json.body.status }}",
-              "operation": "equal",
               "value2": "completed"
             }
           ]
         }
       },
-      "id": "9",
+      "id": "f1c40bf3-2836-4ace-8df6-8ad01e200062",
       "name": "IF - Call Status",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        450,
-        600
+        0,
+        460
       ]
     },
     {
       "parameters": {
+        "authentication": "airtableTokenApi",
         "operation": "update",
-        "baseId": "app2ssjcEHeWNYDxk",
-        "tableId": "tblRDOJZMhX7CoJrq  // Leads Table",
+        "application": {
+          "__rl": true,
+          "value": "app2ssjcEHeWNYDxk",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblRDOJZMhX7CoJrq",
+          "mode": "id"
+        },
         "id": "={{ $json.body.metadata.contact_id }}",
-        "options": {
-          "cellFormat": "json",
-          "fields": {
-            "Status": "Called",
-            "Summary": "={{ $json.body.transcript }}"
-          }
-        }
+        "options": {}
       },
-      "id": "10",
+      "id": "eb29a7fb-014f-4f17-82f3-bda7c596909a",
       "name": "Airtable - Update Called",
       "type": "n8n-nodes-base.airtable",
       "typeVersion": 1,
       "position": [
-        650,
-        550
+        200,
+        400
       ],
       "credentials": {
-        "airtableApi": {
-          "id": "1",
-          "name": "Airtable account"
+        "airtableTokenApi": {
+          "id": "VGS7RvNv9oE7tq9w",
+          "name": "Airtable Personal Access Token account"
         }
       }
     },
     {
       "parameters": {
-        "operations": [
-          {
-            "operation": "create",
-            "baseId": "app2ssjcEHeWNYDxk",
-            "tableId": "tblYYYYYYYYYYYYYY",
-            "options": {
-              "cellFormat": "json",
-              "fields": {
-                "callproviderID": "={{ $json.body.id }}",
-                "customernumber": "={{ $json.body.to }}",
-                "type": "outbound",
-                "started": "={{ $json.body.created_at }}",
-                "ended": "={{ $json.body.updated_at }}",
-                "milliseconds": "={{ $json.body.duration }}",
-                "ended reason": "={{ $json.body.end_reason }}",
-                "transcript": "={{ $json.body.transcript }}"
-              }
-            }
-          }
-        ]
+        "authentication": "airtableTokenApi",
+        "operation": "list",
+        "application": {
+          "__rl": true,
+          "value": "app2ssjcEHeWNYDxk",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblivPxf4entbobO4",
+          "mode": "id"
+        },
+        "additionalOptions": {}
       },
-      "id": "11",
+      "id": "c3ecc29a-cbb1-4d64-b174-85cf54242545",
       "name": "Airtable - Create Call Record",
       "type": "n8n-nodes-base.airtable",
       "typeVersion": 1,
       "position": [
-        850,
-        550
+        400,
+        400
       ],
       "credentials": {
-        "airtableApi": {
-          "id": "1",
-          "name": "Airtable account"
+        "airtableTokenApi": {
+          "id": "VGS7RvNv9oE7tq9w",
+          "name": "Airtable Personal Access Token account"
         }
       }
     },
@@ -276,19 +241,18 @@
           "string": [
             {
               "value1": "={{ $json.body.status }}",
-              "operation": "equal",
               "value2": "failed"
             }
           ]
         }
       },
-      "id": "12",
+      "id": "0d8a0519-4210-4ff2-b988-6941b03dafa2",
       "name": "IF - Call Failed",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        650,
-        650
+        200,
+        580
       ]
     },
     {
@@ -303,96 +267,112 @@
           ]
         }
       },
-      "id": "13",
+      "id": "be062f03-3a0b-4e0f-a047-cc4c02436e73",
       "name": "IF - More Than 2 Attempts",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        1050,
-        650
+        600,
+        540
       ]
     },
     {
       "parameters": {
-        "operation": "get",
-        "baseId": "app2ssjcEHeWNYDxk",
-        "tableId": "tblRDOJZMhX7CoJrq  // Leads Table",
-        "id": "={{ $json.body.metadata.contact_id }}"
+        "authentication": "airtableTokenApi",
+        "operation": "list",
+        "application": {
+          "__rl": true,
+          "value": "app2ssjcEHeWNYDxk",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblRDOJZMhX7CoJrq",
+          "mode": "id"
+        },
+        "additionalOptions": {}
       },
-      "id": "14",
+      "id": "fc7314e6-30f0-4912-8435-43ba3d787e69",
       "name": "Airtable - Get Failed Lead",
       "type": "n8n-nodes-base.airtable",
       "typeVersion": 1,
       "position": [
-        850,
-        650
+        420,
+        600
       ],
       "credentials": {
-        "airtableApi": {
-          "id": "1",
-          "name": "Airtable account"
+        "airtableTokenApi": {
+          "id": "VGS7RvNv9oE7tq9w",
+          "name": "Airtable Personal Access Token account"
         }
       }
     },
     {
       "parameters": {
+        "authentication": "airtableTokenApi",
         "operation": "update",
-        "baseId": "app2ssjcEHeWNYDxk",
-        "tableId": "tblRDOJZMhX7CoJrq  // Leads Table",
+        "application": {
+          "__rl": true,
+          "value": "app2ssjcEHeWNYDxk",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblRDOJZMhX7CoJrq",
+          "mode": "id"
+        },
         "id": "={{ $json.body.metadata.contact_id }}",
-        "options": {
-          "cellFormat": "json",
-          "fields": {
-            "Status": "Failed",
-            "Summary": "Unreachable after multiple attempts"
-          }
-        }
+        "options": {}
       },
-      "id": "15",
+      "id": "9dd94160-bf00-438e-b10c-6a944639e7a2",
       "name": "Airtable - Mark as Failed",
       "type": "n8n-nodes-base.airtable",
       "typeVersion": 1,
       "position": [
-        1250,
-        600
+        820,
+        420
       ],
       "credentials": {
-        "airtableApi": {
-          "id": "1",
-          "name": "Airtable account"
+        "airtableTokenApi": {
+          "id": "VGS7RvNv9oE7tq9w",
+          "name": "Airtable Personal Access Token account"
         }
       }
     },
     {
       "parameters": {
+        "authentication": "airtableTokenApi",
         "operation": "update",
-        "baseId": "app2ssjcEHeWNYDxk",
-        "tableId": "tblRDOJZMhX7CoJrq  // Leads Table",
+        "application": {
+          "__rl": true,
+          "value": "app2ssjcEHeWNYDxk",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblRDOJZMhX7CoJrq",
+          "mode": "id"
+        },
         "id": "={{ $json.body.metadata.contact_id }}",
-        "options": {
-          "cellFormat": "json",
-          "fields": {
-            "Status": "TBC",
-            "Date Time": "={{ $now.plus({minutes: 1}).toISO() }}"
-          }
-        }
+        "options": {}
       },
-      "id": "16",
+      "id": "2d8b8140-37fe-4a12-968d-084f41954246",
       "name": "Airtable - Schedule Retry",
       "type": "n8n-nodes-base.airtable",
       "typeVersion": 1,
       "position": [
-        1250,
-        700
+        800,
+        640
       ],
       "credentials": {
-        "airtableApi": {
-          "id": "1",
-          "name": "Airtable account"
+        "airtableTokenApi": {
+          "id": "VGS7RvNv9oE7tq9w",
+          "name": "Airtable Personal Access Token account"
         }
       }
     }
   ],
+  "pinData": {},
   "connections": {
     "Schedule Trigger": {
       "main": [
@@ -536,5 +516,16 @@
         ]
       ]
     }
-  }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9a7336b3-0745-4a27-9263-27fb4f0278ff",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c53546488684e04c869967713b68505c2c02aa7d5cf5abf2be6c662bfa7f6f11"
+  },
+  "id": "fp39BsctZo0yQWRU",
+  "tags": []
 }
